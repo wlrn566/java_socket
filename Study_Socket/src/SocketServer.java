@@ -10,29 +10,29 @@ public class SocketServer {
 
 	public static void main(String[] args) {
 		// 소켓 서버
+
+		Socket socket = null; // Client와 통신하기 위한 Socket 생성
+		User user = new User(); // 채팅방에 접속해 있는 Client 관리 객체
+		ServerSocket serverSocket = null; // Client 접속을 받기 위한 ServerSocket
+
+		int count = 0; // 쓰레드 할당을 위한 정수
+		Thread thread[] = new Thread[10]; // 10개까지 쓰레드 할당, 즉 채팅방에 10명이 접속 가능
+
 		try {
 			// 포트 번호
 			int port = 1234;
 			// 소켓 생성
-			ServerSocket serverSocket = new ServerSocket(port);
+			serverSocket = new ServerSocket(port);
 			System.out.println(port + " 서버 생성 성공!");
-			Socket socketUser = null; // 클라이언트용 소켓
 
 			// 서버는 계속 돌아가야하므로 while문 처리
 			while (true) {
-				socketUser = serverSocket.accept(); // 소켓 서버 접속 시 socket으로 보내줌
-				System.out.println("접속 : " + socketUser.getLocalAddress()); // 서버 접속자의 로컬주소
+				socket = serverSocket.accept(); // 소켓 서버 접속 시 socket으로 보내줌
+				System.out.println("접속자 : " + socket.getLocalAddress()); // 서버 접속자의 로컬주소
 
-				// 클라이언트 -> 서버 (받은 거)
-				InputStream inputStream = socketUser.getInputStream(); // 정보를 넣음
-				BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream)); // BufferReader에
-																								// inputStream을 담음
-				System.out.println("클라이언트에서의 메세지 : " + reader.readLine()); // 메세지 읽어주기
-
-				// 서버 -> 클라이언트 (보낼 거)
-				OutputStream outputStream = socketUser.getOutputStream(); // 정보 넣음
-				PrintWriter writer = new PrintWriter(outputStream, true);
-				writer.println("SERVER to CLIENT");
+				thread[count] = new Thread(new Receive(socket, user));
+				thread[count].start();
+				count++;
 			}
 		} catch (Exception e) {
 			System.out.println(e.toString());
